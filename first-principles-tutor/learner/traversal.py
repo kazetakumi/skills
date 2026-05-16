@@ -79,19 +79,19 @@ def cmd_relevant(graph, keywords):
 
 
 def cmd_prereqs(graph, concept):
-    by_to = edges_by_to(graph)
+    by_from = edges_by_from(graph)
     nodes = nodes_by_id(graph)
     visited = set()
     queue = deque([concept])
     prereqs = []
     while queue:
         current = queue.popleft()
-        for edge in by_to.get(current, []):
-            dep = edge["from"]
-            if dep not in visited and edge["type"] == "depends_on":
-                visited.add(dep)
-                prereqs.append(dep)
-                queue.append(dep)
+        for edge in by_from.get(current, []):
+            prereq = edge["to"]
+            if prereq not in visited and edge["type"] == "depends_on":
+                visited.add(prereq)
+                prereqs.append(prereq)
+                queue.append(prereq)
     for p in prereqs:
         node = nodes.get(p, {})
         print(f"{p} ({node.get('domain', '?')}) [{node.get('status', 'not_owned')}]")
@@ -99,20 +99,21 @@ def cmd_prereqs(graph, concept):
 
 def cmd_gaps(graph):
     nodes = nodes_by_id(graph)
-    by_to = edges_by_to(graph)
+    by_from = edges_by_from(graph)
     for node in graph["nodes"]:
         if node["status"] == "owned":
-            for edge in by_to.get(node["id"], []):
-                dep = edge["from"]
-                dep_node = nodes.get(dep)
-                if dep_node and dep_node["status"] != "owned":
-                    print(f"GAP: {node['id']} depends on {dep} which is not owned")
+            for edge in by_from.get(node["id"], []):
+                if edge["type"] == "depends_on":
+                    prereq = edge["to"]
+                    prereq_node = nodes.get(prereq)
+                    if prereq_node and prereq_node["status"] != "owned":
+                        print(f"GAP: {node['id']} depends on {prereq} which is not owned")
 
 
 def cmd_sequence(graph, concepts_arg):
     concepts = [c.strip() for c in concepts_arg.split(",")]
     nodes = nodes_by_id(graph)
-    by_to = edges_by_to(graph)
+    by_from = edges_by_from(graph)
 
     # Filter out already owned
     to_teach = [c for c in concepts if nodes.get(c, {}).get("status") != "owned"]
@@ -121,7 +122,7 @@ def cmd_sequence(graph, concepts_arg):
         print("ALL_OWNED")
         return
 
-    # Topological sort by depends_on edges within the set
+    # Topological sort — visit prerequisites before dependents
     in_set = set(to_teach)
     order = []
     visited = set()
@@ -130,9 +131,9 @@ def cmd_sequence(graph, concepts_arg):
         if node in visited or node not in in_set:
             return
         visited.add(node)
-        for edge in by_to.get(node, []):
-            if edge["type"] == "depends_on" and edge["from"] in in_set:
-                visit(edge["from"])
+        for edge in by_from.get(node, []):
+            if edge["type"] == "depends_on" and edge["to"] in in_set:
+                visit(edge["to"])  # visit prerequisite first
         order.append(node)
 
     for c in to_teach:

@@ -34,7 +34,7 @@ All learner data lives globally at `~/.claude/skills/first-principles-tutor/lear
 learner/
 ├── graph.json      ← nodes + edges (source of truth)
 ├── profile.md      ← baseline, session count
-├── traversal.py    ← graph query script
+├── python3 traversal.py    ← graph query script
 └── concepts/
     └── [concept].md  ← full content, read only when needed
 ```
@@ -71,8 +71,8 @@ learner/
 ```
 
 **Subagent prompt:**
-> "Run `python ~/.claude/skills/first-principles-tutor/learner/traversal.py relevant [task-keywords]` to get concepts relevant to the task. Then read only those concept files from `learner/concepts/`. Also read `profile.md`. Return: (1) baseline, (2) relevant owned concepts with axioms, (3) current/paused sequences if any. Nothing else.
-> If `traversal.py` fails for any reason: fall back to reading `graph.json` directly and filter nodes manually by domain keyword match. Never return an error — always return best-effort results."
+> "Run `python3 ~/.claude/skills/first-principles-tutor/learner/python3 traversal.py relevant [task-keywords]` to get concepts relevant to the task. Then read only those concept files from `learner/concepts/`. Also read `profile.md`. Return: (1) baseline, (2) relevant owned concepts with axioms, (3) current/paused sequences if any. Nothing else.
+> If `python3 traversal.py` fails for any reason: fall back to reading `graph.json` directly and filter nodes manually by domain keyword match. Never return an error — always return best-effort results."
 
 - If `sequences.current` matches the task: resume. Tell the user: "Picking up from [X]."
 - If `sequences.paused` matches: offer to resume or continue current
@@ -80,7 +80,7 @@ learner/
 
 **Diagnostic Grill (one question at a time — not a form):**
 
-Before grilling, run `traversal.py owned` to check what's already known. Only probe for concepts relevant to the new task that are NOT already owned.
+Before grilling, run `python3 traversal.py owned` to check what's already known. Only probe for concepts relevant to the new task that are NOT already owned.
 
 Ask one targeted question, adapt the next based on the answer:
 - "If I said [specific term], would that mean anything to you?"
@@ -102,7 +102,7 @@ From the answers, set a **baseline level**:
 - Add node to `graph.json` with status=owned
 - Add `depends_on` edges to any prerequisites taught in this session
 - Write full content to `concepts/[concept].md`
-- Run `traversal.py baseline-check` — upgrades baseline if thresholds met:
+- Run `python3 traversal.py baseline-check` — upgrades baseline if thresholds met:
   - 1–5 owned → `surface`
   - 6–15 owned across 2+ domains → `partial`
   - 15+ owned across 3+ domains → `fluent`
@@ -121,8 +121,9 @@ If push fails: continue the session, retry at end of session. Never block learni
 
 When given any prompt (even vague like "build the backend"):
 
+0. If Step 0 already resumed a `sequences.current` that matches this task — skip steps 1–4, go straight to step 5 using the existing sequence.
 1. Identify the concepts this task requires
-2. Run `traversal.py sequence [concept1,concept2,...]` — returns concepts ordered by dependency, with already-owned ones filtered out
+2. Run `python3 traversal.py sequence [concept1,concept2,...]` — returns concepts ordered by dependency, with already-owned ones filtered out
 3. If all concepts are already owned: tell the user and ask what to build next
 4. Write the filtered sequence to `graph.json` under `sequences.current` immediately
 5. Announce only the next 2 concepts: "Starting with [1], then [2]." Keep the rest internal
@@ -196,7 +197,7 @@ If the user says "I already know this" or wants to skip a concept:
 
 When all concepts in the sequence are done:
 - Briefly summarise what was built and what concepts now owned: "You've covered [X, Y, Z]. The [task] is now yours."
-- Update memory: mark sequence as complete, clear current_sequence position
+- Update memory: mark sequence as complete, clear `sequences.current` in `graph.json`
 - Final sync push:
 ```bash
 git -C ~/.claude/skills/first-principles-tutor/learner add .

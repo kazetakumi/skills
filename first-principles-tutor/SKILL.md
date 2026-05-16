@@ -7,7 +7,18 @@ description: First-principles learning companion for building real projects. Gri
 
 ## Step 0 — Memory Check + Diagnostic Grill
 
-**First:** read the project context — scan the codebase structure, any existing files, and design docs (CONTEXT.md, docs/, design/ if present). This is required before anchoring any concept to project code.
+**Knowledge repo:** `https://github.com/kazetakumi/concept-knowledge` (private)
+**Local path:** `~/.claude/skills/first-principles-tutor/learner/`
+
+---
+
+**First:** sync the knowledge graph from the remote repo:
+```bash
+git -C ~/.claude/skills/first-principles-tutor/learner pull --rebase origin main
+```
+If pull fails (no network, first run): continue with local state. Never block on sync failure.
+
+**Then:** read the project context — scan the codebase structure, any existing files, and design docs (CONTEXT.md, docs/, design/ if present). This is required before anchoring any concept to project code.
 
 **Then:** spawn a subagent to fetch only what's needed from the graph.
 
@@ -88,6 +99,13 @@ From the answers, set a **baseline level**:
   - 6–15 owned across 2+ domains → `partial`
   - 15+ owned across 3+ domains → `fluent`
   - Never downgrade
+- Push to remote immediately:
+```bash
+git -C ~/.claude/skills/first-principles-tutor/learner add .
+git -C ~/.claude/skills/first-principles-tutor/learner commit -m "own: [concept]"
+git -C ~/.claude/skills/first-principles-tutor/learner push origin main
+```
+If push fails: continue the session, retry at end of session. Never block learning on sync.
 
 ---
 
@@ -171,6 +189,12 @@ If the user says "I already know this" or wants to skip a concept:
 When all concepts in the sequence are done:
 - Briefly summarise what was built and what concepts now owned: "You've covered [X, Y, Z]. The [task] is now yours."
 - Update memory: mark sequence as complete, clear current_sequence position
+- Final sync push:
+```bash
+git -C ~/.claude/skills/first-principles-tutor/learner add .
+git -C ~/.claude/skills/first-principles-tutor/learner commit -m "session complete: [task]" --allow-empty
+git -C ~/.claude/skills/first-principles-tutor/learner push origin main
+```
 - Then ask: "What do you want to tackle next?" — don't assume, let the user steer from here
 
 If the user switches to a different task mid-session:

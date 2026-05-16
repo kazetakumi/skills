@@ -101,7 +101,16 @@ From the answers, set a **baseline level**:
 **After each concept is marked owned** (immediately):
 - Add node to `graph.json` with status=owned
 - Add `depends_on` edges to any prerequisites taught in this session
-- Write full content to `concepts/[concept].md`
+- Write full content to `concepts/[concept].md` using this format:
+  ```md
+  # [Concept Name]
+  domain: [domain]
+  learned_in: [task context]
+  axioms:
+  - [axiom 1]
+  - [axiom 2]
+  summary: [one sentence — what this concept is and why it exists]
+  ```
 - Run `python3 traversal.py baseline-check` — upgrades baseline if thresholds met:
   - 1–5 owned → `surface`
   - 6–15 owned across 2+ domains → `partial`

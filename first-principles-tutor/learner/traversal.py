@@ -55,13 +55,22 @@ def cmd_owned(graph):
 
 def cmd_relevant(graph, keywords):
     keywords = [k.lower() for k in keywords]
-    nodes = nodes_by_id(graph)
+    concepts_dir = Path(__file__).parent / "concepts"
     results = []
     for node in graph["nodes"]:
-        score = sum(
-            1 for kw in keywords
-            if kw in node["id"].lower() or kw in node.get("domain", "").lower()
-        )
+        # Load concept file summary and learned_in for richer matching
+        concept_text = ""
+        concept_file = concepts_dir / f"{node['id']}.md"
+        if concept_file.exists():
+            concept_text = concept_file.read_text().lower()
+
+        searchable = " ".join([
+            node["id"].lower(),
+            node.get("domain", "").lower(),
+            node.get("learned_in", "").lower(),
+            concept_text,
+        ])
+        score = sum(1 for kw in keywords if kw in searchable)
         if score > 0:
             results.append((score, node))
     results.sort(key=lambda x: -x[0])

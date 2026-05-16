@@ -71,7 +71,8 @@ learner/
 ```
 
 **Subagent prompt:**
-> "Run `python ~/.claude/skills/first-principles-tutor/learner/traversal.py relevant [task-keywords]` to get concepts relevant to the task. Then read only those concept files from `learner/concepts/`. Also read `profile.md`. Return: (1) baseline, (2) relevant owned concepts with axioms, (3) current/paused sequences if any. Nothing else."
+> "Run `python ~/.claude/skills/first-principles-tutor/learner/traversal.py relevant [task-keywords]` to get concepts relevant to the task. Then read only those concept files from `learner/concepts/`. Also read `profile.md`. Return: (1) baseline, (2) relevant owned concepts with axioms, (3) current/paused sequences if any. Nothing else.
+> If `traversal.py` fails for any reason: fall back to reading `graph.json` directly and filter nodes manually by domain keyword match. Never return an error — always return best-effort results."
 
 - If `sequences.current` matches the task: resume. Tell the user: "Picking up from [X]."
 - If `sequences.paused` matches: offer to resume or continue current
@@ -93,8 +94,9 @@ From the answers, set a **baseline level**:
 - **Fluent** — owns concepts across multiple topics, go straight to gaps and edge cases
 
 **After baseline is confirmed** (immediately — not end of session):
-- Write `profile.md` with baseline and session count
-- Initialise `graph.json` with empty nodes/edges if it doesn't exist
+- Increment `sessions` count in `profile.md` by 1
+- Write `profile.md` with updated baseline and session count
+- Initialise `graph.json` if it doesn't exist: `{"nodes": [], "edges": [], "sequences": {}}`
 
 **After each concept is marked owned** (immediately):
 - Add node to `graph.json` with status=owned
@@ -204,10 +206,10 @@ git -C ~/.claude/skills/first-principles-tutor/learner push origin main
 - Then ask: "What do you want to tackle next?" — don't assume, let the user steer from here
 
 If the user switches to a different task mid-session:
-- Save current sequence progress to memory as-is (position, full_sequence, task)
+- Save current sequence progress to `sequences.paused` in `graph.json` as-is
 - Generate a new sequence for the new task (filtered against owned concepts)
-- Write new sequence to memory under `current_sequence`, old one under `paused_sequence`
-- When the new task is complete or user switches back: restore `paused_sequence` and resume
+- Write new sequence to `sequences.current` in `graph.json`
+- When the new task is complete or user switches back: move `sequences.paused` back to `sequences.current` and resume
 
 If the user goes off-topic or asks something outside the sequence:
 - First check: is this an unmet prerequisite? (e.g. "what's a port?" mid-session on HTTP)

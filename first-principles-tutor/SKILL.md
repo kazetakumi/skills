@@ -34,7 +34,7 @@ All learner data lives globally at `~/.claude/skills/first-principles-tutor/lear
 learner/
 ├── graph.json      ← nodes + edges (source of truth)
 ├── profile.md      ← baseline, session count
-├── python3 traversal.py    ← graph query script
+├── traversal.py            ← graph query script
 └── concepts/
     └── [concept].md  ← full content, read only when needed
 ```
@@ -71,7 +71,7 @@ learner/
 ```
 
 **Subagent prompt:**
-> "Run `python3 ~/.claude/skills/first-principles-tutor/learner/python3 traversal.py relevant [task-keywords]` to get concepts relevant to the task. Then read only those concept files from `learner/concepts/`. Also read `profile.md`. Return: (1) baseline, (2) relevant owned concepts with axioms, (3) current/paused sequences if any. Nothing else.
+> "Run `python3 ~/.claude/skills/first-principles-tutor/learner/traversal.py relevant [task-keywords]` to get concepts relevant to the task. Then read only those concept files from `learner/concepts/`. Also read `profile.md`. Return: (1) baseline, (2) relevant owned concepts with axioms, (3) current/paused sequences if any. Nothing else.
 > If `python3 traversal.py` fails for any reason: fall back to reading `graph.json` directly and filter nodes manually by domain keyword match. Never return an error — always return best-effort results."
 
 - If `sequences.current` matches the task: resume. Tell the user: "Picking up from [X]."

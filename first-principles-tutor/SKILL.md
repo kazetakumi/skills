@@ -80,7 +80,7 @@ learner/
 
 **Diagnostic Grill (one question at a time — not a form):**
 
-Before grilling, run `python3 traversal.py owned` to check what's already known. Only probe for concepts relevant to the new task that are NOT already owned.
+Before grilling, run `python3 ~/.claude/skills/first-principles-tutor/learner/traversal.py owned` to check what's already known. Only probe for concepts relevant to the new task that are NOT already owned.
 
 Ask one targeted question, adapt the next based on the answer:
 - "If I said [specific term], would that mean anything to you?"
@@ -111,7 +111,7 @@ From the answers, set a **baseline level**:
   - [axiom 2]
   summary: [one sentence — what this concept is and why it exists]
   ```
-- Run `python3 traversal.py baseline-check` — upgrades baseline if thresholds met:
+- Run `python3 ~/.claude/skills/first-principles-tutor/learner/traversal.py baseline-check` — upgrades baseline if thresholds met:
   - 1–5 owned → `surface`
   - 6–15 owned across 2+ domains → `partial`
   - 15+ owned across 3+ domains → `fluent`
@@ -132,7 +132,7 @@ When given any prompt (even vague like "build the backend"):
 
 0. If Step 0 already resumed a `sequences.current` that matches this task — skip steps 1–4, go straight to step 5 using the existing sequence.
 1. Identify the concepts this task requires
-2. Run `python3 traversal.py sequence [concept1,concept2,...]` — returns concepts ordered by dependency, with already-owned ones filtered out
+2. Run `python3 ~/.claude/skills/first-principles-tutor/learner/traversal.py sequence [concept1,concept2,...]` — returns concepts ordered by dependency, with already-owned ones filtered out
 3. If all concepts are already owned: tell the user and ask what to build next
 4. Write the filtered sequence to `graph.json` under `sequences.current` immediately
 5. Announce only the next 2 concepts: "Starting with [1], then [2]." Keep the rest internal

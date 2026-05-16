@@ -1,0 +1,7 @@
+# Learner runtime data — personal, not shared
+**/learner/graph.json
+**/learner/profile.md
+**/learner/concepts/
+
+# Keep the traversal script (it's code, not data)
+!**/learner/traversal.py

@@ -12,11 +12,17 @@ description: First-principles learning companion for building real projects. Gri
 
 ---
 
-**First:** sync the knowledge graph from the remote repo:
+**First:** ensure the knowledge repo is present locally:
 ```bash
-git -C ~/.claude/skills/first-principles-tutor/learner pull --rebase origin main
+# If learner dir doesn't exist or has no git remote — clone it
+if [ ! -d ~/.claude/skills/first-principles-tutor/learner/.git ]; then
+  git clone https://github.com/kazetakumi/concept-knowledge \
+    ~/.claude/skills/first-principles-tutor/learner
+else
+  git -C ~/.claude/skills/first-principles-tutor/learner pull --rebase origin main
+fi
 ```
-If pull fails (no network, first run): continue with local state. Never block on sync failure.
+If clone or pull fails (no network, first run): continue with local state. Never block on sync failure.
 
 **Then:** read the project context — scan the codebase structure, any existing files, and design docs (CONTEXT.md, docs/, design/ if present). This is required before anchoring any concept to project code.
 

@@ -1,3 +1,5 @@
+.DS_Store
+
 # Learner runtime data — personal, not shared
 **/learner/graph.json
 **/learner/profile.md

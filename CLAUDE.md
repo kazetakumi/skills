@@ -4,7 +4,8 @@
 - If the request is unclear, ask — don't guess.
 - If there are multiple ways to read it, say so instead of silently picking one.
 - If a simpler approach exists, speak up.
-- If you're confused, name what's unclear and stop.
+- Stop only when guessing wrong would waste real work. Otherwise name the
+  assumption and keep going.
 
 ## 2. Keep it simple
 - Write the least code that solves the problem.
@@ -14,17 +15,27 @@
 - If 200 lines can be 50, make it 50.
 
 ## 3. Replies
-- Be brief. Say the idea in the fewest words.
+- Answer first. No preamble, no recap of what you just did.
+- A few sentences by default, one line if one line does it. Headings and
+  bullets only when it's genuinely long.
+- Plain words, short sentences, common word over jargon. Fragments fine — drop
+  filler and articles where it still reads clean. Trade grammar for speed,
+  never precision: names, paths and numbers stay exact.
+- Say what changed and what's left. Cut the reasoning unless asked, and don't
+  explain a decision twice or restate what the diff already shows.
 - Check facts that matter instead of relying on memory.
 
 ## 4. Subagents
 Delegate to subagents when a task is genuinely parallelizable or independent
-(not as a default). When delegating, prefer antigravity
-(`agy --dangerously-skip-permissions`) as the first choice, using its best
-model (gemini pro, high effort); fall back to another subagent/model if
-antigravity's quota is exhausted. Otherwise, pick the model to match task
-complexity — lighter model for simple/mechanical work, stronger model for
-hard reasoning.
+(not as a default). When delegating, give the subagent all the context it
+needs and a `<success>` criterion. Read its output and check it against that
+criterion before using the work.
+
+Prefer antigravity (`agy --dangerously-skip-permissions`) as the first choice,
+using its best model (gemini pro, high effort); fall back to another
+subagent/model if antigravity's quota is exhausted. Otherwise, pick the model
+to match task complexity — lighter model for simple/mechanical work, stronger
+model for hard reasoning.
 
 ## 5. Commits
 Use a conventional prefix and one short line. No body, no co-author line.

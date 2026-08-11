@@ -25,7 +25,15 @@
   explain a decision twice or restate what the diff already shows.
 - Check facts that matter instead of relying on memory.
 
-## 4. Subagents
+## 4. Documents
+Write documents for the user as self-contained HTML, not Markdown — reports,
+notes, summaries, plans, lessons, anything meant to be read. Inline the CSS,
+no build step, opens straight in a browser.
+
+Markdown only where the format is required: `SKILL.md`, `README.md`,
+`CLAUDE.md`, and other files a tool or convention expects as `.md`.
+
+## 5. Subagents
 Delegate to subagents when a task is genuinely parallelizable or independent
 (not as a default). When delegating, give the subagent all the context it
 needs and a `<success>` criterion. Read its output and check it against that
@@ -37,7 +45,7 @@ subagent/model if antigravity's quota is exhausted. Otherwise, pick the model
 to match task complexity — lighter model for simple/mechanical work, stronger
 model for hard reasoning.
 
-## 5. Commits
+## 6. Commits
 Use a conventional prefix and one short line. No body, no co-author line.
 
 - `feat:` new feature

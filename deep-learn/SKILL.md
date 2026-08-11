@@ -46,21 +46,24 @@ The syllabus is **first principles applied to the subject**: the *fewest* irredu
 
 Persist the map in the topic folder so progress survives across sessions:
 
-- **`syllabus.json`** — the authoritative state the skill reads on resume. One entry per crux: `id`, `title`, `hook`, `owns` (the prior it builds on), `depends_on`, `lesson` (its HTML filename), and `status` ∈ `planned | current | done`.
-- **`index.html`** — the syllabus overview page, the learner's entry point. Render the ladder with clear visual status (✓ done · ▶ current · dimmed = upcoming), each **linking out** to its lesson file (link live only once that lesson exists). Regenerate it from `syllabus.json` whenever status changes, **baking the current statuses into the HTML** so it shows correct progress when opened directly (no server). May also use `localStorage` to let the learner self-tick between sessions.
+- **`syllabus.json`** — the authoritative state the skill reads on resume. One entry per crux: `id`, `title`, `hook`, `owns` (the prior it builds on), `depends_on`, `lesson` (its HTML filename inside `lessons/`), and `status` ∈ `planned | current | done`. Plus a `notes` array — one entry per thing that came up and got cleared: `crux` (the crux id it arose under), `label` (whatever names it best — a term, a question, a symbol, a distinction), and `note` (the idea that cleared it).
+- **`index.html`** — the syllabus overview page, the learner's entry point. Render the ladder with clear visual status (✓ done · ▶ current · dimmed = upcoming), each **linking out** to its lesson file (link live only once that lesson exists). Below the ladder, render an **Appendix**, grouped by crux, from the `notes` array. Regenerate it from `syllabus.json` whenever status or notes change, **baking the current statuses and notes into the HTML** so it shows correct progress when opened directly (no server). Because index.html is regenerated, `syllabus.json` — never the HTML — is where a note is recorded. May also use `localStorage` to let the learner self-tick between sessions.
 
 Layout example:
 ```
 tryouts/<subject>/
-  index.html                     # syllabus map, links to each lesson
   syllabus.json                  # state / resume source of truth
-  01-next-token-prediction.html
-  02-meaning-is-a-direction.html
-  03-attention.html              # one deep lesson per crux
-  ...
+  lessons/                       # every HTML page lives here
+    index.html                   # syllabus map + appendix, links to each lesson
+    01-next-token-prediction.html
+    02-meaning-is-a-direction.html
+    03-attention.html            # one deep lesson per crux
+    ...
 ```
 
 **Lifecycle.** On invocation, look for `syllabus.json` in the topic folder. If found, read it, tell the user where they are ("crux 3 of 5: Attention — done: 1, 2"), and continue from `current`. Set a crux to `current` when you start its lesson; set it to `done` (and advance the next to `current`, updating both `syllabus.json` and `index.html`) when the learner finishes it — either when they say so, or after they've worked its "your turn". Never mark `done` on the learner's behalf just because the lesson was generated.
+
+**Notes.** Whenever the learner raises a doubt mid-lesson and you clear it, append a note to `notes` in `syllabus.json` and regenerate `index.html` — same trigger as a status change. **Capture the thing itself, not the exchange**: if the snag was a word, record the term and what it means; if it was a confusion, record the question and its resolution; if it was two ideas colliding, record the distinction. Pick whichever form the snag actually had, and write it so it stands alone months later — the idea that cleared it, never a transcript of who said what.
 
 ## Process
 

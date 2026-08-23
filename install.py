@@ -7,7 +7,8 @@ import stat
 from pathlib import Path
 
 root = Path(__file__).resolve().parent
-dest = root.parent / ".claude" / "skills"
+project_root = root.parent
+dest = project_root / ".claude" / "skills"
 dest.mkdir(parents=True, exist_ok=True)
 
 for item in sorted(root.iterdir()):
@@ -16,7 +17,7 @@ for item in sorted(root.iterdir()):
 
 claude_md = root / "claude.md"
 if claude_md.exists():
-    shutil.move(str(claude_md), str(dest / claude_md.name))
+    shutil.move(str(claude_md), str(project_root / claude_md.name))
 
 git = root / ".git"
 try:

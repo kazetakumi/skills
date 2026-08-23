@@ -4,6 +4,8 @@ then drop the git history and the installers. Run once, from inside the clone.""
 import os
 import shutil
 import stat
+import subprocess
+import sys
 from pathlib import Path
 
 root = Path(__file__).resolve().parent
@@ -33,14 +35,28 @@ print("skills moved to .claude/skills")
 for installer in ("install.sh", "install.ps1", "install.py"):
     (root / installer).unlink(missing_ok=True)
 
-# Delete whatever's left in root (this script's own dir), since its
-# contents have all been relocated or removed above.
+# Empty out everything except this running script.
 for item in sorted(root.iterdir()):
     if item == Path(__file__).resolve():
-        continue  # don't delete the running script out from under itself
+        continue
     if item.is_dir():
         shutil.rmtree(item)
     else:
         item.unlink()
 
-print("root cleaned up")
+print("root cleaned up; scheduling removal of the clone folder itself")
+
+# Now remove `root` (including this script) via a detached follow-up
+# process, since we can't delete a running script/its folder from within.
+if os.name == "nt":
+    subprocess.Popen(
+        ["cmd", "/c", f'ping 127.0.0.1 -n 2 >nul & rmdir /s /q "{root}"'],
+        creationflags=subprocess.CREATE_NO_WINDOW,
+    )
+else:
+    subprocess.Popen(
+        ["/bin/sh", "-c", f'sleep 1; rm -rf "{root}"'],
+        start_new_session=True,
+    )
+
+sys.exit(0)

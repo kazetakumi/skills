@@ -8,7 +8,7 @@ import stat
 from pathlib import Path
 
 root = Path(__file__).resolve().parent
-dest = root / ".claude" / "skills"
+dest = .. / root / ".claude" / "skills"
 dest.mkdir(parents=True, exist_ok=True)
 
 for item in sorted(root.iterdir()):

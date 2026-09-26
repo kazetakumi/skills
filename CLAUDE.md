@@ -39,12 +39,6 @@ Delegate to subagents when a task is genuinely parallelizable or independent
 needs and a `<success>` criterion. Read its output and check it against that
 criterion before using the work.
 
-Prefer antigravity (`agy --dangerously-skip-permissions`) as the first choice,
-using its best model (gemini pro, high effort); fall back to another
-subagent/model if antigravity's quota is exhausted. Otherwise, pick the model
-to match task complexity — lighter model for simple/mechanical work, stronger
-model for hard reasoning.
-
 ## 6. Commits
 Use a conventional prefix and one short line. No body, no co-author line.
 

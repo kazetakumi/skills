@@ -1,134 +1,99 @@
 ---
 name: video-deep-learn
-description: Turn one YouTube video (URL, or an already-downloaded transcript) into a single self-contained HTML lesson that teaches everything in that video from first principles — the `deep-learn` teaching philosophy applied to full coverage of one video, in the video's own order and with the creator's own intent, nothing dropped. Fetches captions via the sibling `yttdl` skill when given a URL. Use when the user pastes a YouTube link or a transcript and wants to genuinely understand it — e.g. "explain this video", "teach me this talk", "deep dive this lecture", "turn this video into a lesson".
+description: Turn one YouTube video (URL, or an already-downloaded transcript) into a single self-contained HTML lesson that teaches everything in that video from first principles — in the video's own order, in the teacher's voice, with the creator's own intent and examples, nothing dropped. Fetches captions with the sibling `yttdl` skill when given a URL, verifies the video's claims by computing them, then sweeps for coverage so no beat is missed. Use when the user pastes a YouTube link or a transcript and wants to genuinely understand it rather than skim it — e.g. "explain this video", "teach me this talk", "deep dive this lecture", "turn this video into a lesson", "use video-deep-learn on <url>".
 ---
 
 # Video Deep Learn
 
 One video in → **one HTML lesson out** that teaches the whole video from first
-principles, in the teacher's voice, covering every idea the video covers.
+principles, in the teacher's own voice, covering every idea the video covers.
 
-## Inherit the philosophy from `deep-learn`
+**Read [TEACHING.md](TEACHING.md) before writing anything** — the one principle,
+the four commitments, the house style, the quality bar, the traps. This file is
+the workflow only.
 
-**First, read `../deep-learn/SKILL.md`** (sibling directory of this SKILL.md)
-and adopt it: the one principle (connection and causality, never lists), the
-five commitments, the traps, the house style, the quality bar. That file is the
-teaching craft; this file only says how it changes for a video.
+## The five non-negotiables
 
-Do not paste deep-learn's rules here or restate them — read them there.
-
-## The four overrides
-
-Deep-learn assumes a topic and a conversation. A video is a fixed artifact with
-an author who already chose what matters, so four things change:
-
-1. **Scope is the whole video, not one crux.** Deep-learn's commitment 1
-   ("narrow brutally", cut everything but one crux) is **overridden**. Nothing
-   in the video gets dropped. Depth is no longer bought by cutting topics —
-   it's bought **per beat**: every idea the video raises gets derived, not
-   summarized.
-
-2. **The video's progression is the spine.** Build a **spine of cruxes in the
-   video's own order** — one section per beat the creator actually teaches —
-   and apply deep-learn's commitments *inside each*: derive it from a prior the
-   learner already owns (usually the payoff of the previous beat), walk the
-   discovery (problem → natural attempt that fails → the fix), make the learner
-   see it before you reveal it. Reorder only where the video's order genuinely
-   blocks understanding, and when you do, say nothing about it — just teach the
-   order that works.
-
-3. **No gates, no grilling.** This is one-shot: URL in, HTML out. Skip
-   deep-learn's Gate 1 and Gate 2 entirely — the video's own level and its own
-   goal stand in for the interview. Ask the user nothing unless the input itself
-   is broken (dead link, empty transcript).
-
-4. **No syllabus state.** `syllabus.json`, `lessons/`, `index.html`, statuses,
-   the notes array — none of it applies. One page, no state machine.
-
-## Same intent as the creator
-
-You are teaching *their* lesson, properly — not your own lesson on their topic.
-Absorb the video's goal, its examples, its claims, its emphasis, its opinions
-and asides, then teach them **in first person** (deep-learn's commitment 5
-stands: never "the speaker says", "the video explains", "at 12:40 he"). Their
-example is the example — don't swap in one you like better; where their example
-is thin, *deepen* it rather than replace it. Where they emphasize, you dwell;
-where they wave a hand, you derive the step they skipped. Add your own
-scaffolding freely — the origin story, the failed attempt, the diagram, the
-misconception — but never a different destination.
-
-If the video makes a claim you know to be wrong, don't silently rewrite it:
-teach the claim in first person as they taught it, then correct it in an aside as
-your own second thought — "I said X above; that's the standard telling, and it's
-slightly wrong, here's why" — which keeps the correction honest without breaking
-voice.
+1. **Scope is the whole video.** Every idea, example, aside, caveat and claim
+   gets taught. Depth is not bought by cutting topics — it's bought **per beat**:
+   each beat gets *derived*, not summarized.
+2. **The video's progression is the spine.** One section per beat, in the
+   creator's order. Reorder only where that order genuinely blocks
+   understanding, and then say nothing about it — just teach the order that works.
+3. **One-shot.** URL in, HTML out. No interview, no clarifying questions, no
+   syllabus or progress files. Ask only if the input is broken (dead link,
+   empty transcript).
+4. **One self-contained HTML page** — no build step, no assets beyond CDN MathJax.
+5. **Nothing missed** — guaranteed mechanically by the beat list (step 2) and
+   the coverage sweep (step 5), not by good intentions.
 
 ## 1. Get the transcript
 
-**If given a URL** — use the sibling `yttdl` skill. `$YTTDL` below is the
-absolute path to this skill's sibling `yttdl` directory (`../yttdl` from this
-SKILL.md; both live under the same skills folder):
+`$YTTDL` is this skill's sibling `yttdl` directory (`../yttdl` from here — both
+live in the same skills folder).
 
 ```bash
 uv run --project "$YTTDL" yttdl "<video-url>" -o transcripts --translate en
 ```
 
-`--translate en` is the default choice — it gets English out of almost any
-captioned video (see `$YTTDL/SKILL.md`). Output lands in `transcripts/<video_id>.txt`
-relative to the caller's current directory.
+`--translate en` gets English out of almost any captioned video. Output lands in
+`transcripts/<video_id>.txt`, relative to the caller's current directory.
 
-If captions are disabled, the video yields nothing to teach from: say so and
-point the user at the `watch` skill, which reads frames and audio. Don't build a
-workaround.
+Grab the title, creator and duration for the header from the same venv:
 
-**If given a transcript** (pasted text, or a file path) — read it and skip the
-download entirely.
+```bash
+uv run --project "$YTTDL" python -c "
+import yt_dlp, json
+with yt_dlp.YoutubeDL({'quiet':True,'skip_download':True}) as y:
+    i = y.extract_info('<video-url>', download=False)
+print(json.dumps({k:i.get(k) for k in ('title','uploader','duration')}))"
+```
 
-Also fetch the **title, creator, and URL** for the lesson header. Then, if the
-transcript leaves a claim, term, or derivation genuinely unexplained, look it up
-on the web — deep-learn's "ground every claim in a source, never parametric
-memory" applies here too. The transcript is the spine, not the ceiling.
+**If given a transcript** (pasted text or a file path), read it and skip both
+commands.
+
+If captions are disabled there is nothing to teach from: say so and point the
+user at the `watch` skill (frames and audio). Don't build a workaround.
 
 ## 2. Map the beats before writing a word
 
-Auto-captions are an unpunctuated wall. Before teaching, segment the transcript
-into an explicit **beat list** — every distinct idea, example, aside, caveat,
-demo, and claim, in order. Write it down (scratch file or your own notes; it is
-not a deliverable). This list is both the outline and, later, the coverage
-checklist.
+Auto-captions are an unpunctuated wall. Read the whole transcript, then write
+down an explicit **beat list** — every distinct idea, example, aside, caveat,
+demo and claim, in order. Scratch artifact, not a deliverable; it serves twice,
+as the outline now and the coverage checklist later.
 
-Then compress each beat the deep-learn way: what's the irreducible idea, what
-prior does it stand on, what's the discovery path, what misconception bites
-here. Only then write.
+Then compress each beat: the irreducible idea, the prior it stands on, the
+discovery path, the misconception that bites.
 
-## 3. Write the lesson
+## 3. Verify the claims by computing them
 
-One **self-contained HTML file** — inline CSS/JS, no build step, MathJax via
-CDN if there's math — in deep-learn's house style (warm paper `#fbfaf6`, ink
-`#2b2620`, system serif, single ~640px column, muted accent `#355070`, light
-code blocks, asides inline with a left rule, `<details>` for every reveal so
-the learner produces before they're told).
+**Do this before drafting, and do not skip it.** Take every number, formula and
+factual claim the video makes and actually check it — run the arithmetic in
+Python, re-derive the formula, search for the primary source behind a cited
+study. Ground anything the transcript leaves unexplained in a real source rather
+than parametric memory.
 
-Name it from the video: `<slug-of-title>.html` in the caller's current
-directory. Open with the video's title, creator, and a link back to it — then
-drop into the teaching and never mention the video again.
+This is the step that changes the lesson most. It reliably finds errors worth
+correcting, and it produces the honest tests and counter-examples that turn a
+summary into teaching. Build the worked examples out of numbers you computed, so
+the page is reproducible.
 
-Long videos make long pages; that is fine. Give the page a sticky or top-of-page
-contents list once it runs past a handful of beats, so the spine is visible.
+## 4. Write the lesson
 
-## 4. Sweep for coverage, then for depth
+Follow TEACHING.md. Name the file `<slug-of-title>.html` in the caller's current
+directory. Open with title, creator and a link back to the video — then drop into
+the teaching and never mention the video again.
 
-Two passes, in this order — the first is unique to this skill, the second is
-inherited:
+Long pages are fine. Add a top-of-page contents list past a handful of beats.
 
-- **Coverage sweep.** Walk the beat list from step 2 against the finished HTML,
-  beat by beat. Every beat must be *taught*, not merely mentioned. Patch each
-  gap. This is the "don't miss anything" guarantee, and it's mechanical on
-  purpose — you will otherwise lose the last third of a long video.
-- **Quality bar.** Now run deep-learn's quality bar on the whole page: did I
-  transmit understanding or fill boxes, could the learner predict a new case,
-  is every claim derived rather than asserted, where is the learner passive,
-  does a real person teach this. Revise before showing the user.
+## 5. Sweep for coverage, then for depth
 
-Coverage without depth is a transcript with nicer fonts. Depth without coverage
-is a different skill (`deep-learn`). This page owes the learner both.
+- **Coverage sweep.** Walk the beat list against the finished page, beat by
+  beat. Every beat must be *taught*, not merely mentioned. Patch each gap.
+  Expect the misses to cluster in the video's last third — that is where
+  attention drops and it is where they will be.
+- **Quality bar.** Then run TEACHING.md's quality bar and revise before showing
+  the user.
+
+Coverage without depth is a transcript in nicer fonts. Depth without coverage
+is a different lesson than the one the creator taught. This page owes both.
